@@ -1,0 +1,18 @@
+# This is an example configuration file
+
+# Log level can be one of debug, info, warn, error. Defaults to info.
+# log-level: info
+
+# The port to listen on for incoming connections. Defaults to 8080.
+# port: 8080
+
+# Zot registry URL. Must be specified.
+# zot-url: http://zot.example.com:8080
+
+# Location of this zot-docker-proxy instance. Used in the token service to generate URLs.
+# my-url: http://localhost:8080
+
+# CORS configuration. Defaults to allow all origins.
+# cors-allowed-origins: 
+  # - http://localhost:8080
+  # - http://zot.example.com
