@@ -10,6 +10,8 @@ import (
 	"github.com/USA-RedDragon/zot-docker-proxy/internal/config"
 )
 
+const dockerAnonymousToken = "docker-anonymous-token"
+
 func dockerAuthMiddleware(cfg *config.Config) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +42,7 @@ func dockerAuthMiddleware(cfg *config.Config) func(next http.Handler) http.Handl
 
 func dockerTokenHandler(w http.ResponseWriter, r *http.Request) {
 	auth := r.Header.Get("Authorization")
-	token := "QQ="
+	token := dockerAnonymousToken
 	if auth != "" && strings.HasPrefix(auth, "Basic ") {
 		b64 := strings.TrimSpace(auth[len("Basic "):])
 		if b64 != "" {
@@ -80,7 +82,7 @@ func dockerV2Handler(_ http.ResponseWriter, r *http.Request) {
 	auth := r.Header.Get("Authorization")
 	if strings.HasPrefix(auth, "Bearer ") {
 		tok := strings.TrimSpace(auth[len("Bearer "):])
-		if tok == "QQ=" {
+		if tok == dockerAnonymousToken {
 			r.Header.Del("Authorization")
 		} else if tok != "" {
 			r.Header.Set("Authorization", "Basic "+tok)
