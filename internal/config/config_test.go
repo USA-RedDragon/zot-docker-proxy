@@ -1,10 +1,12 @@
 package config
 
 import (
+	"errors"
 	"testing"
 )
 
 func TestConfigValidate(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		cfg     Config
@@ -49,11 +51,12 @@ func TestConfigValidate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := tt.cfg.Validate()
 			if tt.wantErr == nil && err != nil {
 				t.Errorf("expected no error, got %v", err)
 			}
-			if tt.wantErr != nil && err != tt.wantErr {
+			if tt.wantErr != nil && !errors.Is(err, tt.wantErr) {
 				t.Errorf("expected error %v, got %v", tt.wantErr, err)
 			}
 		})

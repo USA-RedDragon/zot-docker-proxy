@@ -1,25 +1,27 @@
-package server
-
-import (
-	"testing"
-)
-
+package server_test
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"testing"
+
 	"github.com/USA-RedDragon/zot-docker-proxy/internal/config"
+	"github.com/USA-RedDragon/zot-docker-proxy/internal/server"
 )
 
 func mockProxyHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
-		w.Write([]byte("mock proxy"))
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte("mock proxy"))
+		if err != nil {
+			http.Error(w, "failed to write response", http.StatusInternalServerError)
+		}
 	})
 }
 
 func TestServerStart(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		LogLevel:           config.LogLevelInfo,
 		Port:               8080,
@@ -27,11 +29,11 @@ func TestServerStart(t *testing.T) {
 		MyURL:              "http://localhost:8080",
 		ZotURL:             "http://localhost:5000",
 	}
-	router, err := NewRouter(cfg, mockProxyHandler())
+	router, err := server.NewRouter(cfg, mockProxyHandler())
 	if err != nil {
 		t.Fatalf("failed to create router: %v", err)
 	}
-	req := httptest.NewRequest("GET", "/v2", nil)
+	req := httptest.NewRequest(http.MethodGet, "/v2", nil)
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 	if rec.Code == 401 || rec.Code == 200 {
@@ -42,6 +44,7 @@ func TestServerStart(t *testing.T) {
 }
 
 func TestDockerAuthMiddleware_AnonymousToken(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		LogLevel:           config.LogLevelInfo,
 		Port:               8080,
@@ -49,8 +52,11 @@ func TestDockerAuthMiddleware_AnonymousToken(t *testing.T) {
 		MyURL:              "http://localhost:8080",
 		ZotURL:             "http://localhost:5000",
 	}
-	router, _ := NewRouter(cfg, mockProxyHandler())
-	req := httptest.NewRequest("GET", "/docker-token", nil)
+	router, err := server.NewRouter(cfg, mockProxyHandler())
+	if err != nil {
+		t.Fatalf("failed to create router: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodGet, "/docker-token", nil)
 	req.Header.Set("User-Agent", "docker/24.0.0")
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
@@ -64,6 +70,7 @@ func TestDockerAuthMiddleware_AnonymousToken(t *testing.T) {
 }
 
 func TestDockerAuthMiddleware_BasicToken(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		LogLevel:           config.LogLevelInfo,
 		Port:               8080,
@@ -71,8 +78,11 @@ func TestDockerAuthMiddleware_BasicToken(t *testing.T) {
 		MyURL:              "http://localhost:8080",
 		ZotURL:             "http://localhost:5000",
 	}
-	router, _ := NewRouter(cfg, mockProxyHandler())
-	req := httptest.NewRequest("GET", "/docker-token", nil)
+	router, err := server.NewRouter(cfg, mockProxyHandler())
+	if err != nil {
+		t.Fatalf("failed to create router: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodGet, "/docker-token", nil)
 	req.Header.Set("User-Agent", "docker/24.0.0")
 	req.Header.Set("Authorization", "Basic dGVzdDp0ZXN0")
 	rec := httptest.NewRecorder()
@@ -87,6 +97,7 @@ func TestDockerAuthMiddleware_BasicToken(t *testing.T) {
 }
 
 func TestDockerAuthMiddleware_Ping(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		LogLevel:           config.LogLevelInfo,
 		Port:               8080,
@@ -94,8 +105,11 @@ func TestDockerAuthMiddleware_Ping(t *testing.T) {
 		MyURL:              "http://localhost:8080",
 		ZotURL:             "http://localhost:5000",
 	}
-	router, _ := NewRouter(cfg, mockProxyHandler())
-	req := httptest.NewRequest("GET", "/v2", nil)
+	router, err := server.NewRouter(cfg, mockProxyHandler())
+	if err != nil {
+		t.Fatalf("failed to create router: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodGet, "/v2", nil)
 	req.Header.Set("User-Agent", "docker/24.0.0")
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
