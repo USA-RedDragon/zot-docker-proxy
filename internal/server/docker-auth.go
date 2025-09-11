@@ -80,7 +80,7 @@ func dockerPingHandler(cfg *config.Config, w http.ResponseWriter, r *http.Reques
 			return
 		}
 		slog.Debug("Docker ping without Authorization, sending 401 with WWW-Authenticate Bearer", "url", r.URL.String(), "token_url", tokenURL)
-		w.Header().Set("WWW-Authenticate", "Bearer realm=\""+strconv.Quote(tokenURL)+"\"")
+		w.Header().Set("WWW-Authenticate", "Bearer realm="+strconv.Quote(tokenURL))
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
