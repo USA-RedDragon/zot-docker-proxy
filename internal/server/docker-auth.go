@@ -1,10 +1,11 @@
 package server
 
 import (
-	"fmt"
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/USA-RedDragon/zot-docker-proxy/internal/config"
@@ -50,15 +51,22 @@ func dockerTokenHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
-	tokenBytes := fmt.Sprintf(`{"token":"%s"}`, token)
-	bytes, err := w.Write([]byte(tokenBytes))
+	tokenBytes, err := json.Marshal(map[string]string{
+		"token": token,
+	})
+	if err != nil {
+		slog.Error("Failed to marshal token response", "error", err.Error())
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	written, err := w.Write(tokenBytes)
 	if err != nil {
 		slog.Error("Failed to write token response", "error", err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	if bytes != len(tokenBytes) {
-		slog.Warn("Wrote fewer bytes than expected in token response", "expected", len(tokenBytes), "written", bytes)
+	if written != len(tokenBytes) {
+		slog.Warn("Wrote fewer bytes than expected in token response", "expected", len(tokenBytes), "written", written)
 	}
 }
 
@@ -72,7 +80,7 @@ func dockerPingHandler(cfg *config.Config, w http.ResponseWriter, r *http.Reques
 			return
 		}
 		slog.Debug("Docker ping without Authorization, sending 401 with WWW-Authenticate Bearer", "url", r.URL.String(), "token_url", tokenURL)
-		w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer realm="%s"`, tokenURL))
+		w.Header().Set("WWW-Authenticate", "Bearer realm=\""+strconv.Quote(tokenURL)+"\"")
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
