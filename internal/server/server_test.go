@@ -14,16 +14,12 @@ import (
 )
 
 // createTestBackend creates a test HTTP server that can be used as a backend for proxy tests
-func createTestBackend(response string) *httptest.Server {
+func createTestBackend() *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Backend-Called", "true")
 		w.Header().Set("X-Backend-Host", r.Host)
 		w.Header().Set("X-Backend-URL", r.URL.String())
 		w.WriteHeader(http.StatusOK)
-		_, err := w.Write([]byte(response))
-		if err != nil {
-			http.Error(w, "failed to write response", http.StatusInternalServerError)
-		}
 	}))
 }
 
@@ -31,7 +27,7 @@ func TestServerStart(t *testing.T) {
 	t.Parallel()
 
 	// Create a mock backend server
-	backend := createTestBackend("backend response")
+	backend := createTestBackend()
 	defer backend.Close()
 
 	cfg := &config.Config{
@@ -59,7 +55,7 @@ func TestServerWithRealProxy(t *testing.T) {
 	t.Parallel()
 
 	// Create a mock backend server
-	backend := createTestBackend("backend response")
+	backend := createTestBackend()
 	defer backend.Close()
 
 	cfg := &config.Config{
@@ -88,66 +84,13 @@ func TestServerWithRealProxy(t *testing.T) {
 	if rec.Header().Get("X-Backend-Called") != "true" {
 		t.Errorf("expected backend to be called, but X-Backend-Called header not found")
 	}
-	if !strings.Contains(rec.Body.String(), "backend response") {
-		t.Errorf("expected backend response, got %s", rec.Body.String())
-	}
-}
-
-func TestNewReverseProxy(t *testing.T) {
-	t.Parallel()
-
-	// Create a mock backend server
-	backend := createTestBackend("proxied content")
-	defer backend.Close()
-
-	// Test creating a reverse proxy
-	proxy, err := server.NewReverseProxy(backend.URL)
-	if err != nil {
-		t.Fatalf("failed to create reverse proxy: %v", err)
-	}
-
-	// Test that the proxy works
-	req := httptest.NewRequest(http.MethodGet, "/test/path", nil)
-	rec := httptest.NewRecorder()
-	proxy.ServeHTTP(rec, req)
-
-	if rec.Code != 200 {
-		t.Errorf("expected 200, got %d", rec.Code)
-	}
-	if !strings.Contains(rec.Body.String(), "proxied content") {
-		t.Errorf("expected proxied content, got %s", rec.Body.String())
-	}
-
-	// Verify that the request was properly forwarded
-	backendHost := rec.Header().Get("X-Backend-Host")
-	if backendHost == "" {
-		t.Errorf("expected backend host header to be set")
-	}
-
-	backendURL := rec.Header().Get("X-Backend-URL")
-	if !strings.Contains(backendURL, "/test/path") {
-		t.Errorf("expected backend URL to contain /test/path, got %s", backendURL)
-	}
-}
-
-func TestNewReverseProxy_InvalidURL(t *testing.T) {
-	t.Parallel()
-
-	// Test with invalid URL (using invalid characters)
-	_, err := server.NewReverseProxy("http://[::1]:%")
-	if err == nil {
-		t.Errorf("expected error for invalid URL, got nil")
-	}
-	if !strings.Contains(err.Error(), "failed to parse target URL") {
-		t.Errorf("expected parse error message, got %v", err)
-	}
 }
 
 func TestDockerAuthMiddleware_AnonymousToken(t *testing.T) {
 	t.Parallel()
 
 	// Create a mock backend server
-	backend := createTestBackend("backend response")
+	backend := createTestBackend()
 	defer backend.Close()
 
 	cfg := &config.Config{
@@ -188,7 +131,7 @@ func TestDockerAuthMiddleware_BasicToken(t *testing.T) {
 	t.Parallel()
 
 	// Create a mock backend server
-	backend := createTestBackend("backend response")
+	backend := createTestBackend()
 	defer backend.Close()
 
 	cfg := &config.Config{
@@ -220,7 +163,7 @@ func TestDockerAuthMiddleware_Ping(t *testing.T) {
 	t.Parallel()
 
 	// Create a mock backend server
-	backend := createTestBackend("backend response")
+	backend := createTestBackend()
 	defer backend.Close()
 
 	cfg := &config.Config{

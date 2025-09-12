@@ -37,10 +37,12 @@ func NewRouter(cfg *config.Config) (*chi.Mux, error) {
 
 	r.Use(dockerAuthMiddleware(cfg))
 
-	handler, err := NewReverseProxy(cfg.ZotURL)
+	url, err := url.Parse(cfg.ZotURL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create reverse proxy: %w", err)
+		return nil, fmt.Errorf("failed to parse zot URL: %w", err)
 	}
+
+	handler := newReverseProxy(url)
 
 	// Catch-all: proxy everything
 	r.Handle("/*", handler)
@@ -48,19 +50,15 @@ func NewRouter(cfg *config.Config) (*chi.Mux, error) {
 	return r, nil
 }
 
-func NewReverseProxy(targetRaw string) (http.Handler, error) {
-	target, err := url.Parse(targetRaw)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse target URL: %w", err)
-	}
-	proxy := httputil.NewSingleHostReverseProxy(target)
+func newReverseProxy(upstream *url.URL) http.Handler {
+	proxy := httputil.NewSingleHostReverseProxy(upstream)
 
 	origDirector := proxy.Director
 	proxy.Director = func(req *http.Request) {
-		slog.Debug("Proxying request", "method", req.Method, "url", req.URL.String(), "host", req.Host, "to", target.String())
+		slog.Debug("Proxying request", "method", req.Method, "url", req.URL.String(), "host", req.Host, "to", upstream.String())
 		origDirector(req)
-		req.Host = target.Host
+		req.Host = upstream.Host
 	}
 
-	return proxy, nil
+	return proxy
 }
