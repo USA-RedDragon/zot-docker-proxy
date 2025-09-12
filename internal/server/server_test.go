@@ -1,6 +1,7 @@
 package server_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/USA-RedDragon/zot-docker-proxy/internal/config"
 	"github.com/USA-RedDragon/zot-docker-proxy/internal/server"
+	"github.com/USA-RedDragon/zot-docker-proxy/internal/tokenforge"
 )
 
 func mockProxyHandler() http.Handler {
@@ -64,8 +66,18 @@ func TestDockerAuthMiddleware_AnonymousToken(t *testing.T) {
 	if rec.Code != 200 {
 		t.Errorf("expected 200, got %d", rec.Code)
 	}
-	if !strings.Contains(rec.Body.String(), "docker-anonymous-token") {
-		t.Errorf("expected anonymous token in response, got %s", rec.Body.String())
+	var resp map[string]string
+	err = json.Unmarshal(rec.Body.Bytes(), &resp)
+	if err != nil {
+		t.Errorf("failed to unmarshal response: %v", err)
+	}
+	if _, ok := resp["token"]; !ok {
+		t.Errorf("expected token in response, got %s", rec.Body.String())
+	}
+	valid, err := tokenforge.VerifyToken(cfg.Secret, resp["token"])
+	if err != nil || !valid {
+		t.Errorf("token=%s", rec.Body.String())
+		t.Errorf("expected valid token, got error: %v", err)
 	}
 }
 
