@@ -12,6 +12,9 @@
 # Location of this zot-docker-proxy instance. Used in the token service to generate URLs.
 # my-url: http://localhost:8080
 
+# Secret used to sign tokens, required
+# secret: mysecret
+
 # CORS configuration. Defaults to allow all origins.
 # cors-allowed-origins: 
   # - http://localhost:8080

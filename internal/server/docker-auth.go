@@ -7,11 +7,11 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/USA-RedDragon/zot-docker-proxy/internal/config"
+	"github.com/USA-RedDragon/zot-docker-proxy/internal/tokenforge"
 )
-
-const dockerAnonymousToken = "docker-anonymous-token"
 
 func dockerAuthMiddleware(cfg *config.Config) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -23,13 +23,13 @@ func dockerAuthMiddleware(cfg *config.Config) func(next http.Handler) http.Handl
 
 				switch {
 				case path == "/docker-token":
-					dockerTokenHandler(w, r)
+					dockerTokenHandler(cfg, w, r)
 					return
 				case (path == "/v2" || path == "/v2/") && auth == "":
 					dockerPingHandler(cfg, w, r)
 					return
 				case path == "/v2" || strings.HasPrefix(path, "/v2/"):
-					dockerV2Handler(w, r)
+					dockerV2Handler(cfg, w, r)
 				}
 
 				next.ServeHTTP(w, r)
@@ -41,13 +41,22 @@ func dockerAuthMiddleware(cfg *config.Config) func(next http.Handler) http.Handl
 	}
 }
 
-func dockerTokenHandler(w http.ResponseWriter, r *http.Request) {
+func dockerTokenHandler(cfg *config.Config, w http.ResponseWriter, r *http.Request) {
 	auth := r.Header.Get("Authorization")
-	token := dockerAnonymousToken
+	token := ""
 	if auth != "" && strings.HasPrefix(auth, "Basic ") {
 		b64 := strings.TrimSpace(auth[len("Basic "):])
 		if b64 != "" {
 			token = b64
+		}
+	}
+	if len(token) == 0 {
+		var err error
+		token, err = tokenforge.MakeToken(cfg.Secret, 1*time.Hour)
+		if err != nil {
+			slog.Error("Failed to generate anonymous token", "error", err.Error())
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -86,11 +95,18 @@ func dockerPingHandler(cfg *config.Config, w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func dockerV2Handler(_ http.ResponseWriter, r *http.Request) {
+func dockerV2Handler(cfg *config.Config, _ http.ResponseWriter, r *http.Request) {
 	auth := r.Header.Get("Authorization")
 	if strings.HasPrefix(auth, "Bearer ") {
 		tok := strings.TrimSpace(auth[len("Bearer "):])
-		if tok == dockerAnonymousToken {
+		validated, err := tokenforge.VerifyToken(cfg.Secret, tok)
+		if err != nil {
+			// This can happen normally if the token is expired or invalid, or if
+			// docker is actually logged in with a real token.
+			slog.Debug("Failed to verify token", "error", err.Error(), "token", tok)
+		}
+		if validated {
+			slog.Debug("Verified token")
 			r.Header.Del("Authorization")
 		} else if tok != "" {
 			r.Header.Set("Authorization", "Basic "+tok)

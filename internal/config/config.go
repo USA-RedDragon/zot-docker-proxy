@@ -12,6 +12,7 @@ var (
 	ErrInvalidZotURL   = errors.New("zot-url must be a valid URL starting with http:// or https://")
 	ErrMyURLRequired   = errors.New("my-url is required if cors-allowed-origins is not set to default")
 	ErrInvalidMyURL    = errors.New("my-url must be a valid URL starting with http:// or https://")
+	ErrSecretRequired  = errors.New("secret is required")
 )
 
 type Config struct {
@@ -20,6 +21,7 @@ type Config struct {
 	CORSAllowedOrigins []string `name:"cors-allowed-origins" description:"CORS allowed origins" default:"https://*,http://*"`
 	MyURL              string   `name:"my-url" description:"The protocol, host (and port if necessary) where this proxy is running."`
 	ZotURL             string   `name:"zot-url" description:"The protocol, host (and port if necessary) where the Zot registry is running"`
+	Secret             string   `name:"secret" description:"Secret used to sign tokens, required"`
 }
 
 type LogLevel string
@@ -59,6 +61,10 @@ func (c Config) Validate() error {
 	url, err = url.Parse(c.MyURL)
 	if err != nil || (url.Scheme != "http" && url.Scheme != "https") || url.Host == "" {
 		return ErrInvalidMyURL
+	}
+
+	if c.Secret == "" {
+		return ErrSecretRequired
 	}
 
 	return nil
