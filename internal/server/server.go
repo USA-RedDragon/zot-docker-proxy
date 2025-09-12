@@ -20,7 +20,7 @@ const (
 	Config_ContextKey contextKey = iota
 )
 
-func NewRouter(cfg *config.Config, proxyHandler ...http.Handler) (*chi.Mux, error) {
+func NewRouter(cfg *config.Config) (*chi.Mux, error) {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -37,15 +37,9 @@ func NewRouter(cfg *config.Config, proxyHandler ...http.Handler) (*chi.Mux, erro
 
 	r.Use(dockerAuthMiddleware(cfg))
 
-	var handler http.Handler
-	if len(proxyHandler) > 0 && proxyHandler[0] != nil {
-		handler = proxyHandler[0]
-	} else {
-		var err error
-		handler, err = newReverseProxy(cfg.ZotURL)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create reverse proxy: %w", err)
-		}
+	handler, err := NewReverseProxy(cfg.ZotURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create reverse proxy: %w", err)
 	}
 
 	// Catch-all: proxy everything
@@ -54,7 +48,7 @@ func NewRouter(cfg *config.Config, proxyHandler ...http.Handler) (*chi.Mux, erro
 	return r, nil
 }
 
-func newReverseProxy(targetRaw string) (http.Handler, error) {
+func NewReverseProxy(targetRaw string) (http.Handler, error) {
 	target, err := url.Parse(targetRaw)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse target URL: %w", err)
