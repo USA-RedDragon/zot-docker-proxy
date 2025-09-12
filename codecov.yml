@@ -9,3 +9,6 @@ github_checks:
 parsers:
   go:
     partials_as_hits: true
+ignore:
+  - "main.go"
+  - "cmd/**"
