@@ -6,6 +6,14 @@ A simple proxy server for [Zot](https://zotregistry.dev) to enable use of the Do
 
 Huge shoutout to [@gabe565](https://github.com/gabe565) for the original implementation of this proxy server and discovering the changes needed to support the Docker CLI.
 
+## How it works
+
+If the user agent does not begin with `docker/`, requests will be forwarded to Zot unmodified.
+
+The Docker CLI relies on the registry to redirect it to a token service in the case that it sends a request to `/v2` without authentication. This project, by way of reverse proxying, provides a `/docker-token` endpoint which provides the anonymous token that the Docker CLI requests. When future requests to the API come in from the Docker CLI, this proxy will validate the token, then if valid, forward it as an anonymous API call to Zot.
+
+This satisfies the authentication requirements for the Docker CLI to work with the Zot registry when anonymous access is allowed.
+
 ## Usage
 
 The proxy server is configured either by command line flags, a configuration file, or environment variables. All three methods can be used together, with command line flags taking precedence over environment variables, which take precedence over the configuration file.
