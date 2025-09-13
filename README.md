@@ -58,3 +58,7 @@ cd zot-docker-proxy
 go build .
 ./zot-docker-proxy --zot-url https://zot.example.com --my-url http://localhost:8080 --secret change-me
 ```
+
+### Kubernetes
+
+I do not provide a Helm chart, however you can observe my Zot manifests in my personal Flux repo as an example: <https://github.com/USA-RedDragon/home-cluster-flux/blob/main/services/zot/app/values.yaml>. This deployment uses the [bjw-s-labs app-template Helm chart](https://bjw-s-labs.github.io/helm-charts/docs/app-template/).
