@@ -27,6 +27,7 @@ The proxy server is configured either by command line flags, a configuration fil
 ```yaml
 zot-url: https://zot.example.com
 my-url: http://localhost:8080
+secret: change-me
 ```
 
 ### Running with Docker
@@ -36,6 +37,7 @@ docker run -d \
     -p 8080:8080 \
     -e ZOT_URL=https://zot.example.com \
     -e MY_URL=http://localhost:8080 \
+    -e SECRET=change-me \
     --name zot-docker-proxy \
     ghcr.io/usa-reddragon/zot-docker-proxy:latest
 ```
@@ -46,5 +48,5 @@ docker run -d \
 git clone https://github.com/USA-RedDragon/zot-docker-proxy.git
 cd zot-docker-proxy
 go build .
-./zot-docker-proxy --zot-url https://zot.example.com --my-url http://localhost:8080
+./zot-docker-proxy --zot-url https://zot.example.com --my-url http://localhost:8080 --secret change-me
 ```
