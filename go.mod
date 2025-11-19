@@ -8,7 +8,7 @@ require (
 	github.com/go-chi/cors v1.2.2
 	github.com/lmittmann/tint v1.1.2
 	github.com/spf13/cobra v1.10.1
-	golang.org/x/crypto v0.44.0
+	golang.org/x/crypto v0.45.0
 )
 
 require (
