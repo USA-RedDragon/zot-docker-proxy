@@ -3,7 +3,7 @@ module github.com/USA-RedDragon/zot-docker-proxy
 go 1.25.6
 
 require (
-	github.com/USA-RedDragon/configulator v0.0.1
+	github.com/USA-RedDragon/configulator v0.0.3
 	github.com/go-chi/chi/v5 v5.2.4
 	github.com/go-chi/cors v1.2.2
 	github.com/lmittmann/tint v1.1.2
