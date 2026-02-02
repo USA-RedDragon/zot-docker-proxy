@@ -6,7 +6,7 @@ require (
 	github.com/USA-RedDragon/configulator v0.0.3
 	github.com/go-chi/chi/v5 v5.2.4
 	github.com/go-chi/cors v1.2.2
-	github.com/lmittmann/tint v1.1.2
+	github.com/lmittmann/tint v1.1.3
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/crypto v0.47.0
 )
