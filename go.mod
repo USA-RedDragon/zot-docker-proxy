@@ -1,6 +1,6 @@
 module github.com/USA-RedDragon/zot-docker-proxy
 
-go 1.25.7
+go 1.26.0
 
 require (
 	github.com/USA-RedDragon/configulator v0.0.5
