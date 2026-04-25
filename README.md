@@ -2,7 +2,10 @@
 
 [![Release](https://github.com/USA-RedDragon/zot-docker-proxy/actions/workflows/release.yaml/badge.svg)](https://github.com/USA-RedDragon/zot-docker-proxy/actions/workflows/release.yaml) [![go.mod version](https://img.shields.io/github/go-mod/go-version/USA-RedDragon/zot-docker-proxy.svg)](https://github.com/USA-RedDragon/zot-docker-proxy) [![GoReportCard](https://goreportcard.com/badge/github.com/USA-RedDragon/zot-docker-proxy)](https://goreportcard.com/report/github.com/USA-RedDragon/zot-docker-proxy) [![License](https://badgen.net/github/license/USA-RedDragon/zot-docker-proxy)](https://github.com/USA-RedDragon/zot-docker-proxy/blob/main/LICENSE) [![Release](https://img.shields.io/github/release/USA-RedDragon/zot-docker-proxy.svg)](https://github.com/USA-RedDragon/zot-docker-proxy/releases/) [![codecov](https://codecov.io/gh/USA-RedDragon/zot-docker-proxy/graph/badge.svg?token=J73cSjZcIG)](https://codecov.io/gh/USA-RedDragon/zot-docker-proxy)
 
-A simple proxy server for [Zot](https://zotregistry.dev) to enable use of the Docker CLI. This is to work around [Zot issue 2928](https://github.com/project-zot/zot/issues/2928#issuecomment-2641225960), as Zot will not add support for the Docker CLI.
+A simple proxy server for [Zot](https://zotregistry.dev) to enable use of the Docker CLI. This is to work around [Zot issue 2928](https://github.com/project-zot/zot/issues/2928#issuecomment-2641225960), ~as Zot will not add support for the Docker CLI.~
+
+> [!CAUTION]
+> With great joy, I am able to archive this repo. Zot finally added support for Docker's weird auth scheme in [v2.1.16](https://github.com/project-zot/zot/releases/tag/v2.1.16) with a bug fix for Docker Compose and Buildx coming in the near future (likely v2.1.17). Thanks to the folks working on Zot who delivered on this feature.
 
 Huge shoutout to [@gabe565](https://github.com/gabe565) for the original implementation of this proxy server and discovering the changes needed to support the Docker CLI.
 
